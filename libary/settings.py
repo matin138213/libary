@@ -15,6 +15,7 @@ from decouple import config
 import os
 
 from django.core.handlers.wsgi import WSGIHandler
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -128,3 +129,4 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+AUTH_USER_MODEL = 'core.Users'

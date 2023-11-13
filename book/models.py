@@ -7,16 +7,16 @@ from django.db import models
 
 # Create your models here.
 class Books(models.Model):
-    owner = models.ForeignKey("core.Users", on_delete=models.CASCADE)
+    owner = models.ForeignKey("core.Users", on_delete=models.SET_NULL,null=True,related_name='book')
     publisher = models.CharField(max_length=255)
     vol = models.PositiveIntegerField()
     page_count = models.PositiveIntegerField()
     writer = models.CharField(max_length=255)
     translator = models.CharField(max_length=255)
     publish_year = models.CharField(max_length=255)
-    stock = models.IntegerField()
+    stock = models.PositiveIntegerField()
     title = models.CharField(max_length=255)
-    description = models.TextField(max_length=255)
+    description = models.TextField()
     picture = models.ImageField(upload_to='images')
     evable_notif = models.ManyToManyField("core.Users", related_name='users')
 
@@ -24,4 +24,4 @@ class Books(models.Model):
 class Category(models.Model):
     title = models.CharField(max_length=255)
     parent = models.ForeignKey('self', on_delete=models.SET_NULL,null=True,blank=True)
-    book = models.ManyToManyField("book.Books", related_name='books')
+    book = models.ManyToManyField("book.Books", related_name='categories')
