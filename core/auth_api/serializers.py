@@ -3,7 +3,7 @@ import re
 from rest_framework import serializers
 
 from core.models import Users
-from django.contrib.auth.hashers import check_password
+from django.contrib.auth.hashers import check_password, make_password
 
 apps_name = 'core'
 
@@ -46,6 +46,11 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'write_only': True}
         }
+
+    def create(self, validated_data):
+        validated_data.pop('confirm_password', None)
+        validated_data['password'] = make_password(validated_data['password'])
+        return super().create(validated_data)
 
     def validate(self, data):
         if data['password'] != data['confirm_password']:

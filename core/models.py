@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError
 class Users(AbstractUser):
     first_name = models.CharField(max_length=255, verbose_name='نام')
     last_name = models.CharField(max_length=255, verbose_name='نام خانوادگی')
-    username = models.CharField(max_length=255, unique=True, verbose_name='کاربر')
+    username = models.CharField(max_length=255, unique=True, verbose_name='نام کاربری')
     phone_number = models.CharField(max_length=11, verbose_name='شماره موبایل')
     email = models.EmailField(verbose_name='ایمیل')
     telegram_id = models.CharField(max_length=100, verbose_name='ایدی تلگرام')

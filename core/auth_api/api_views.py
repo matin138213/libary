@@ -39,11 +39,12 @@ class Login(CreateAPIView):
         return Response(response, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class LogoutView(APIView):
-    permission_classes = (IsAuthenticated,)
-    # serializer_class = LogoutSerializer
 
-    def post(self, request):
+class LogoutView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = LogoutSerializer
+
+    def create(self, request):
         try:
             refresh_token = request.data["refresh_token"]
             token = RefreshToken(refresh_token)
