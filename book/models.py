@@ -1,6 +1,5 @@
 from django.db import models
-
-
+from datetime import datetime
 # from django.apps import apps
 #
 # apps.get_model("core", "Users")
@@ -17,7 +16,7 @@ class Category(models.Model):
 
 
 class Books(models.Model):
-    owner = models.ForeignKey("core.Users", on_delete=models.SET_NULL, null=True, related_name='book',
+    owner = models.ForeignKey('core.Users', on_delete=models.SET_NULL, null=True, related_name='book',
                               verbose_name='صاحب')
     publisher = models.CharField(max_length=255, verbose_name='ناشر')
     vol = models.PositiveIntegerField(verbose_name='جلد')
@@ -31,6 +30,7 @@ class Books(models.Model):
     picture = models.ImageField(upload_to='images', verbose_name='عکس')
     # evable_notif = models.ManyToManyField("core.Users", related_name='users', verbose_name='اطلاع رسانی به کاربر')
     category = models.ManyToManyField(Category,related_name='categories', verbose_name='کتگوری')
+    created_at=models.DateTimeField(auto_now_add=True,verbose_name='زمان ساختن')
 
     class Meta:
         verbose_name = 'کتاب'

@@ -50,8 +50,8 @@ class Request(models.Model):
     user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='request', verbose_name='کاربر')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='زمان ساختن')
     meta_data = models.CharField(max_length=200, verbose_name='over_data')
-    is_accepted = models.CharField(choices=ACCEPTED_CHOICES, max_length=1, default=PENDING, verbose_name='درخواست')
-    type = models.CharField(choices=TYPE_CHOICES, max_length=1, default=BORROW_TYPE, verbose_name='نوع')
+    is_accepted = models.CharField(choices=ACCEPTED_CHOICES, max_length=255, default=PENDING, verbose_name='درخواست')
+    type = models.CharField(choices=TYPE_CHOICES, max_length=255, default=BORROW_TYPE, verbose_name='نوع')
 
     class Meta:
         verbose_name = 'درخواست'

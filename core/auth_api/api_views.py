@@ -60,7 +60,7 @@ class UserViewSet(ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [IsAdminSuperUser]
 
-    @action(detail=False, methods=['GET', 'PATCH'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['GET', 'PATCH'], permission_classes=[IsAuthenticated], serializer_class=UserSerializer)
     def me(self, request):
         user = request.user
         if request.method == 'GET':
@@ -71,3 +71,4 @@ class UserViewSet(ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
+
