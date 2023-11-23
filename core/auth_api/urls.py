@@ -5,7 +5,8 @@ from rest_framework_nested import routers
 app_name = 'core'
 
 router = routers.DefaultRouter()
-router.register('users', api_views.UserViewSet, basename='users')
+router.register('users', api_views.UserViewSet, basename='users'),
+router.register('request',api_views.RequestViewSet,basename='request'),
 
 urlpatterns = [
     path('login/', api_views.Login.as_view(), name='login'),

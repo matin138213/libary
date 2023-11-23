@@ -2,6 +2,7 @@ import re
 
 from rest_framework import serializers
 
+from book.models import Books
 from core.models import Users, Request
 from django.contrib.auth.hashers import check_password, make_password
 
@@ -11,7 +12,6 @@ apps_name = 'core'
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=255)
     password = serializers.CharField(max_length=255)
-
 
     def validate(self, data):
         username = data['username']
@@ -56,6 +56,35 @@ class UserSerializer(serializers.ModelSerializer):
         if any('\u0600' <= char <= '\u06FF' for char in telegram_id):
             raise serializers.ValidationError("Telegram ID should not contain Farsi letters.")
         return data
-# class RequestSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model=Request
+
+
+class RequestBookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Books
+        fields = ['id', 'title', 'picture']
+
+
+class UsersSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Users
+        fields = ['id', 'full_name']
+
+    def get_full_name(self, obj):
+        return obj.get_full_name()
+
+
+class RequestSerializer(serializers.ModelSerializer):
+    book = RequestBookSerializer()
+    user = UsersSerializer()
+
+    class Meta:
+        model = Request
+        fields = ['id', 'book', 'user', 'created_at', 'meta_data', 'type', 'is_accepted']
+
+
+class SimpleRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Request
+        fields = ['is_accepted']
