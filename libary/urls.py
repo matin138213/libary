@@ -24,6 +24,6 @@ urlpatterns = [
     path('book/', include('book.api.urls')),
     path('core/', include('core.auth_api.urls')),
     path("__debug__/", include("debug_toolbar.urls")),
-    # path('notifications/',include('notifications.api.urls')),
+    path('notifications/',include('notifications.api.urls')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

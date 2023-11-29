@@ -2,10 +2,12 @@ from django.db.models import Count, Q, Avg, Value
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from book.api.permissions import IsAdminSuperUser
-from book.api.serializers import BookSerializer, SimpleBookSerializer, CategorySerializer, GetBookSerializer
+from book.api.serializers import BookSerializer, SimpleBookSerializer, CategorySerializer, GetBookSerializer, \
+    ExtensionSerializer
 from book.filters import BooksFilter
 from book.models import Category, Books
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -13,6 +15,10 @@ from django.db.models.functions import Coalesce
 from django.db.models import IntegerField
 
 from core.models import Request, Users
+from datetime import timedelta
+from django.utils import timezone
+
+from notifications.models import TimeLimit
 
 
 class BookViewSet(ModelViewSet):
@@ -23,16 +29,37 @@ class BookViewSet(ModelViewSet):
     search_fields = ['writer', 'title']
     filterset_class = BooksFilter
 
-    @action(methods=['post'], detail=True, serializer_class=GetBookSerializer)
-    def get_books(self, request, pk=None):
+    @action(methods=['post'],detail=True, serializer_class=ExtensionSerializer,permission_classes=[IsAuthenticated])
+    def extension_books(self, request, pk):
         try:
             book = self.get_object()
         except Books.DoesNotExist:
             return Response({"error": "Book not found."}, status=404)
         user = self.request.user
-        serializer = GetBookSerializer(data=request.data, context={'user': self.request.user,'book':book})
+        dead_line = request.data.get('dead_line')
+
+        serializer = ExtensionSerializer(data=request.data, context={'user': user, 'book': book})
         serializer.is_valid(raise_exception=True)
-        request_obj = Request.objects.create(type='B', book=book, user=user)
+
+        request_obj = Request.objects.create(type='R', book=book, user=user, meta_data=dead_line)
+
+        return Response({'message': f'The book was renewed again {pk}.'})
+
+    @action(methods=['post'], detail=True, serializer_class=GetBookSerializer, permission_classes=[IsAuthenticated])
+    def get_books(self, request, pk):
+        try:
+            book = self.get_object()
+        except Books.DoesNotExist:
+            return Response({"error": "Book not found."}, status=404)
+
+        user = self.request.user
+        dead_line = request.data.get('dead_line')
+
+        serializer = GetBookSerializer(data=request.data, context={'user': user, 'book': book})
+        serializer.is_valid(raise_exception=True)
+
+        request_obj = Request.objects.create(type='B', book=book, user=user, meta_data=dead_line)
+
         return Response({'message': f'The book has been received {pk}.'})
 
     def get_queryset(self):

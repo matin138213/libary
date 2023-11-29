@@ -1,5 +1,6 @@
 import re
 
+from django.db.models import Q
 from rest_framework import serializers
 
 from book.models import Books
@@ -83,8 +84,23 @@ class RequestSerializer(serializers.ModelSerializer):
         model = Request
         fields = ['id', 'book', 'user', 'created_at', 'meta_data', 'type', 'is_accepted']
 
+    # def validate(self, data):
+    #     instance = self.instance
+    #
+    #     return data
+
 
 class SimpleRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Request
         fields = ['is_accepted']
+
+    def validate(self, data):
+        instance = self.instance
+
+        if instance and instance.is_accepted in ['A', 'N'] and data.get('is_accepted') != 'P':
+            raise serializers.ValidationError('نمیتوانید تغییر بدهید چون ریکوست با وضعیت A یا N وجود دارد')
+        elif instance.book.stock == 0:
+            raise serializers.ValidationError('The book is not available')
+
+        return data

@@ -1,4 +1,7 @@
+from datetime import timedelta, datetime
+
 from django.shortcuts import render
+from django.utils import timezone
 from django_filters import OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
@@ -12,10 +15,14 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from book.models import Books
+from core.auth_api.filters import RequestFilter
 from core.auth_api.permissions import IsAdminSuperUser
 from core.auth_api.serializers import LoginSerializer, UserSerializer, LogoutSerializer, RequestSerializer, \
     SimpleRequestSerializer
 from core.models import Users, Request
+from notifications.models import Notifications, TimeLimit
+from rest_framework import status
 
 
 # Create your views here.
@@ -79,12 +86,48 @@ class UserViewSet(ModelViewSet):
 
 
 class RequestViewSet(ListModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet, RetrieveModelMixin):
-    queryset = Request.objects.select_related('book','user').all()
+    queryset = Request.objects.all().order_by('-created_at')
     permission_classes = [IsAdminSuperUser]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['is_accepted','type']
+    filterset_class = RequestFilter
 
     def get_serializer_class(self):
-        if self.request.method in ['PATCH','PUT']:
+        if self.request.method in ['PATCH', 'PUT']:
             return SimpleRequestSerializer
         return RequestSerializer
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+
+        instance = self.get_object()
+        instance_accepted = instance.is_accepted
+        days = int(instance.meta_data)
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        if instance.is_accepted == 'A':
+            book = instance.book
+            print("Before decrease: ", book.stock)
+            book.stock -= 1
+            print("After decrease: ", book.stock)
+            book.save()
+            print("Book ID: ", instance.book.id)
+
+        if instance.is_accepted == 'A':
+            user = self.request.user
+
+            book = instance.book
+            notifications = Notifications.objects.create(user=user,
+                                                         description=f'{book.title}درخواست امانت برای این کتاب تایید شد',
+                                                         title='تاییدشد', picture=book.picture)
+            end_time = datetime.now() + timedelta(days=int(days))
+            time_limit = TimeLimit.objects.create(user=user, book=book, end_time=end_time)
+        elif instance.is_accepted == 'N':
+            user = self.request.user
+            book = instance.book
+            notifications = Notifications.objects.create(user=user,
+                                                         description=f'{book.title}درخواست امانت برای این کتاب رد شد',
+                                                         title='ردشد', picture=book.picture)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
